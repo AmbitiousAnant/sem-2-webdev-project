@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { Store, ShoppingCart, Edit, Trash2 } from 'lucide-react';
+import { Store, Flame, Edit, Trash2, CheckCircle, ChefHat } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import { getProducts, saveProducts, getCart, saveCart } from './localStorage';
+import { getProducts, saveProducts, getQueue, saveQueue } from './localStorage';
 
-const ProductCard = ({ product, onAddToCart, onEdit, onDelete }) => {
+const ProductCard = ({ product, onAddToQueue, onEdit, onDelete }) => {
   return (
     <div className="card">
       <img src={product.image || 'https://via.placeholder.com/200'} alt={product.name} className="card-img" />
@@ -12,8 +12,8 @@ const ProductCard = ({ product, onAddToCart, onEdit, onDelete }) => {
       <p>{product.desc}</p>
       <div className="card-price">₹{Number(product.price).toFixed(2)}</div>
       <div className="card-actions">
-        <button onClick={() => onAddToCart(product)} style={{ flex: 1 }}>
-          <ShoppingCart size={18} /> Add
+        <button onClick={() => onAddToQueue(product)} style={{ flex: 1, backgroundColor: '#ff9f43' }}>
+          <Flame size={18} /> Cook
         </button>
         <button className="secondary" onClick={() => onEdit(product)} title="Edit">
           <Edit size={18} />
@@ -50,13 +50,13 @@ const ProductForm = ({ onSubmit, editingProduct, onCancel }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.price) return;
-    
+
     const product = {
       ...formData,
       id: formData.id || uuidv4(),
       price: parseFloat(formData.price)
     };
-    
+
     onSubmit(product);
     if (!editingProduct) {
       setFormData({ name: '', price: '', desc: '', image: '' });
@@ -65,38 +65,38 @@ const ProductForm = ({ onSubmit, editingProduct, onCancel }) => {
 
   return (
     <div className="form-container">
-      <h2>{editingProduct ? 'Edit Food Item' : 'Add New Food Item'}</h2>
+      <h2>{editingProduct ? 'Edit Menu Item' : 'Add New Menu Item'}</h2>
       <form onSubmit={handleSubmit}>
-        <input 
-          type="text" 
-          name="name" 
-          placeholder="Food Name" 
-          value={formData.name} 
-          onChange={handleChange} 
-          required 
+        <input
+          type="text"
+          name="name"
+          placeholder="Food Name"
+          value={formData.name}
+          onChange={handleChange}
+          required
         />
-        <input 
-          type="number" 
-          name="price" 
-          placeholder="Price" 
-          step="0.01" 
-          value={formData.price} 
-          onChange={handleChange} 
-          required 
+        <input
+          type="number"
+          name="price"
+          placeholder="Price"
+          step="0.01"
+          value={formData.price}
+          onChange={handleChange}
+          required
         />
-        <textarea 
-          name="desc" 
-          placeholder="Description" 
-          value={formData.desc} 
-          onChange={handleChange} 
+        <textarea
+          name="desc"
+          placeholder="Description"
+          value={formData.desc}
+          onChange={handleChange}
           rows="3"
         />
-        <input 
-          type="url" 
-          name="image" 
-          placeholder="Image URL" 
-          value={formData.image} 
-          onChange={handleChange} 
+        <input
+          type="url"
+          name="image"
+          placeholder="Image URL"
+          value={formData.image}
+          onChange={handleChange}
         />
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button type="submit">{editingProduct ? 'Update Item' : 'Add Item'}</button>
@@ -109,43 +109,36 @@ const ProductForm = ({ onSubmit, editingProduct, onCancel }) => {
   );
 };
 
-const Cart = ({ cartItems, onRemoveFromCart }) => {
-  const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-  if (cartItems.length === 0) {
+const CookingQueue = ({ queueItems, onFinishCooking }) => {
+  if (queueItems.length === 0) {
     return (
       <div className="cart-container">
-        <h2>Your Cart</h2>
-        <p>Cart is empty. Add some delicious food!</p>
+        <h2><ChefHat size={24} style={{ marginRight: '8px', verticalAlign: 'bottom' }}/> Cooking Queue</h2>
+        <p>No active orders right now. Waiting for new cooking tasks!</p>
       </div>
     );
   }
 
   return (
     <div className="cart-container">
-      <h2>Your Cart</h2>
+      <h2><ChefHat size={24} style={{ marginRight: '8px', verticalAlign: 'bottom' }}/> Cooking Queue</h2>
       <div>
-        {cartItems.map(item => (
+        {queueItems.map(item => (
           <div key={item.id} className="cart-item">
             <div>
-              <strong>{item.name}</strong> 
-              <span style={{ color: '#666', marginLeft: '0.5rem' }}>x {item.quantity}</span>
+              <strong style={{ fontSize: '1.2rem' }}>{item.name}</strong>
+              <span style={{ color: '#ff6b6b', marginLeft: '0.5rem', fontWeight: 'bold' }}>x {item.quantity} orders</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <span>₹{(item.price * item.quantity).toFixed(2)}</span>
-              <button 
-                className="danger" 
-                style={{ padding: '0.25rem 0.5rem' }} 
-                onClick={() => onRemoveFromCart(item.id)}
+              <button
+                style={{ backgroundColor: '#1dd1a1', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                onClick={() => onFinishCooking(item.id)}
               >
-                <Trash2 size={14} />
+                <CheckCircle size={18} /> Done Cooking
               </button>
             </div>
           </div>
         ))}
-      </div>
-      <div className="cart-total">
-        Total: ₹{total.toFixed(2)}
       </div>
     </div>
   );
@@ -153,7 +146,7 @@ const Cart = ({ cartItems, onRemoveFromCart }) => {
 
 function App() {
   const [products, setProducts] = useState(getProducts);
-  const [cart, setCart] = useState(getCart);
+  const [queue, setQueue] = useState(getQueue);
   const [editingProduct, setEditingProduct] = useState(null);
 
   useEffect(() => {
@@ -161,8 +154,8 @@ function App() {
   }, [products]);
 
   useEffect(() => {
-    saveCart(cart);
-  }, [cart]);
+    saveQueue(queue);
+  }, [queue]);
 
   const handleSaveProduct = (product) => {
     if (editingProduct) {
@@ -175,49 +168,51 @@ function App() {
 
   const handleDeleteProduct = (id) => {
     setProducts(products.filter(p => p.id !== id));
-    setCart(cart.filter(item => item.id !== id));
+    setQueue(queue.filter(item => item.id !== id));
   };
 
-  const handleAddToCart = (product) => {
-    const existingItem = cart.find(item => item.id === product.id);
+  const handleAddToQueue = (product) => {
+    const existingItem = queue.find(item => item.id === product.id);
     if (existingItem) {
-      setCart(cart.map(item => 
+      setQueue(queue.map(item =>
         item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
       ));
     } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
+      setQueue([...queue, { ...product, quantity: 1 }]);
     }
   };
 
-  const handleRemoveFromCart = (id) => {
-    setCart(cart.filter(item => item.id !== id));
+  const handleFinishCooking = (id) => {
+    // For simplicity, finishing the cooking clears all orders for that item.
+    // Alternatively, you could decrement by 1, but marking 'Done' usually completes the whole batch.
+    setQueue(queue.filter(item => item.id !== id));
   };
 
   return (
     <div className="container">
       <header>
         <div className="logo">
-          <Store size={32} /> My Kitchen
+          <Store size={32} /> My Kitchen Staff Portal
         </div>
       </header>
 
       <main>
-        <ProductForm 
-          onSubmit={handleSaveProduct} 
-          editingProduct={editingProduct} 
-          onCancel={() => setEditingProduct(null)} 
+        <ProductForm
+          onSubmit={handleSaveProduct}
+          editingProduct={editingProduct}
+          onCancel={() => setEditingProduct(null)}
         />
 
-        <h2>Menu</h2>
+        <h2>Menu Items Available</h2>
         {products.length === 0 ? (
           <p>No food items available. Please add some!</p>
         ) : (
           <div className="grid">
             {products.map(product => (
-              <ProductCard 
-                key={product.id} 
-                product={product} 
-                onAddToCart={handleAddToCart}
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToQueue={handleAddToQueue}
                 onEdit={setEditingProduct}
                 onDelete={handleDeleteProduct}
               />
@@ -225,9 +220,9 @@ function App() {
           </div>
         )}
 
-        <Cart 
-          cartItems={cart} 
-          onRemoveFromCart={handleRemoveFromCart} 
+        <CookingQueue
+          queueItems={queue}
+          onFinishCooking={handleFinishCooking}
         />
       </main>
     </div>

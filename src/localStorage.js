@@ -1,5 +1,5 @@
 const PRODUCTS_KEY = 'my_kitchen_products_v5';
-const CART_KEY = 'my_kitchen_cart_v5';
+const QUEUE_KEY = 'my_kitchen_queue_v1';
 
 export const getProducts = () => {
   const data = localStorage.getItem(PRODUCTS_KEY);
@@ -23,11 +23,11 @@ export const saveProducts = (products) => {
   localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
 };
 
-export const getCart = () => {
-  const data = localStorage.getItem(CART_KEY);
+export const getQueue = () => {
+  const data = localStorage.getItem(QUEUE_KEY);
   return data ? JSON.parse(data) : [];
 };
 
-export const saveCart = (cart) => {
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+export const saveQueue = (queue) => {
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
 };
