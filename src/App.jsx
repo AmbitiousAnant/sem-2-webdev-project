@@ -113,7 +113,7 @@ const CookingQueue = ({ queueItems, onFinishCooking }) => {
   if (queueItems.length === 0) {
     return (
       <div className="cart-container">
-        <h2><ChefHat size={24} style={{ marginRight: '8px', verticalAlign: 'bottom' }}/> Cooking Queue</h2>
+        <h2><ChefHat size={24} style={{ marginRight: '8px', verticalAlign: 'bottom' }} /> Cooking Queue</h2>
         <p>No active orders right now. Waiting for new cooking tasks!</p>
       </div>
     );
@@ -121,7 +121,7 @@ const CookingQueue = ({ queueItems, onFinishCooking }) => {
 
   return (
     <div className="cart-container">
-      <h2><ChefHat size={24} style={{ marginRight: '8px', verticalAlign: 'bottom' }}/> Cooking Queue</h2>
+      <h2><ChefHat size={24} style={{ marginRight: '8px', verticalAlign: 'bottom' }} /> Cooking Queue</h2>
       <div>
         {queueItems.map(item => (
           <div key={item.id} className="cart-item">
@@ -183,8 +183,6 @@ function App() {
   };
 
   const handleFinishCooking = (id) => {
-    // For simplicity, finishing the cooking clears all orders for that item.
-    // Alternatively, you could decrement by 1, but marking 'Done' usually completes the whole batch.
     setQueue(queue.filter(item => item.id !== id));
   };
 
